@@ -16,7 +16,7 @@ Here i create from scratch in [Pytorch](https://docs.pytorch.org/docs/2.13/index
 
 I split the work in the distinct parts in order to have cleaner structure and follow more easily the paper step by step, so the stages are:
 
-1. [Image Augementation](#image-augementation)
+1. [Image Augmentation](#image-augementation)
 2. [Base Encoder](#base-encoder)
 3. [Projection Head](#projection-head)
 4. [Loss Functions](#loss-functions)
@@ -27,7 +27,7 @@ Finally i conduct some experiments in order to evaluate the work and validate th
 ## Dataset
 As the base dataset i use the [evanarlian/imagenet_1k_resized_256](https://huggingface.co/datasets/evanarlian/imagenet_1k_resized_256) which is the **ImageNet already transforemd to 256 x 256 pixels** for smaller compute requirements, and because [datasets](https://github.com/huggingface/datasetss) support streaming mode which is very usefull for my case so i dont download the whole dataset locally.
 
-## Image Augementation
+## Image Augmentation
 As specified in the paper the augmentation that stood out and was selected in the end was the following 3 image augmentation steps:
     
 1. [Random Crop](https://docs.pytorch.org/vision/main/generated/torchvision.transforms.RandomCrop.html)
@@ -41,8 +41,27 @@ Below i am presenting a random sample from the dataset where the 1st image is th
 <img src="./assets/Image Augmentaitons.jpg" alt="Image Augmentations" width="800">
 </center>
 
-***Important**: In the paper it is stated that <i>"Color histograms alone suffice to distinguish images. Neural net may exploint this shortcut to solve the predictive task"</i> and that is the reason that color distortion and gaussian blur are used, in order to mitigate this "hacky way" in and let the model learn generalizable features.*
+***Important**: In the paper it is stated that <i>"Color histograms alone suffice to distinguish images. Neural net may exploit this shortcut to solve the predictive task"</i> and that is the reason that color distortion and gaussian blur are used, in order to mitigate this "hacky way" and let the model learn generalizable features.*
 ## Base Encoder
+As presented in the paper they state clearly *"We opt for simplicity and adopt the commonly used ResNet"* in order to obtain h_i. More specifically they use **ResNet-50** (known also as ResNet v1.5) as said in *"We use ResNet-50 as the base encoder net-work and a 2-layer..."*
+
+<center>
+<img src="./assets/resnet50.png" alt="Base Network ResNet-50" width="800">
+</center>
+
+There are 2 at least implementations available:
+* Left Image - [Pytorch ResNet-50](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)
+* Right Image - [Hugging Face ResNet-50](https://huggingface.co/microsoft/resnet-50)
+
+<center>
+<img src="./assets/ResNet_Comparison_Pytorch_vs_Hugging_Face.jpg" alt="ResNet-50 Pytorch VS Hugging Face" width="1200">
+</center>
+
+And compairing the head to head Hugging Face implementation seems a little faster for some reason so i am going to use this.
+<center>
+<img src="./assets/ResNet_Comparison_Times.jpg" alt="ResNet-50 Comparison Times" width="600">
+</center>
+
 ## Projection Head
 ## Loss Functions
 ## Pipeline

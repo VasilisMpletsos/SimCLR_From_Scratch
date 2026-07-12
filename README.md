@@ -57,11 +57,13 @@ There are 2 at least implementations available:
 <img src="./assets/ResNet_Comparison_Pytorch_vs_Hugging_Face.jpg" alt="ResNet-50 Pytorch VS Hugging Face" width="1200">
 </center>
 
-And compairing the head to head Hugging Face implementation seems a little faster for some reason so i am going to use this.
+And compairing head to head Hugging Face implementation seems a little faster for some reason. (maybe they use compile, maybe lower precision automatically), but i am goind to use the pytorch implementation.
 <center>
 <img src="./assets/ResNet_Comparison_Times.jpg" alt="ResNet-50 Comparison Times" width="600">
 </center>
 
 ## Projection Head
+
+The projection head is a very simple MLP with 2 layers as noted in *"We use MLP with one hidden layer to obtain z_i = g(h_i)=W^(2) * σ((W^(1))*h_i) where σ is a ReLU non linearity"*
 ## Loss Functions
 ## Pipeline

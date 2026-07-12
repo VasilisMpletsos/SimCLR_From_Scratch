@@ -84,30 +84,4 @@ Their loss function is clearly described in section 2.1 where they frame the dot
 
 And then they define the loss l_(i,j) = -log((e^(sim(z_i, z_j)/temprature))/SUM_(k=1 -> N) e ^ (sim(z_i, z_k)/temprature)) and they name it as **NT-Xent**
 
-First, the similarity between two projected representations is defined as the **cosine similarity**:
-
-$$
-\operatorname{sim}(\mathbf{u}, \mathbf{v}) =
-\frac{\mathbf{u}^{\top}\mathbf{v}}
-{\|\mathbf{u}\|\,\|\mathbf{v}\|}.
-$$
-
-Using this similarity measure, the loss for a positive pair $(i, j)$ is defined as:
-
-$$
-\ell_{i,j}
-=
--\log
-\frac{
-\exp\!\left(
-\operatorname{sim}(\mathbf{z}_i,\mathbf{z}_j)/\tau
-\right)
-}{
-\sum\limits_{k=1}^{2N}
-\exp\!\left(
-\operatorname{sim}(\mathbf{z}_i,\mathbf{z}_k)/\tau
-\right)
-},
-$$
-
 ## Pipeline

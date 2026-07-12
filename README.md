@@ -62,8 +62,52 @@ And compairing head to head Hugging Face implementation seems a little faster fo
 <img src="./assets/ResNet_Comparison_Times.jpg" alt="ResNet-50 Comparison Times" width="600">
 </center>
 
+The implementations can be found at file [network.py](./src/networks.py#BaseEncoder)
+
 ## Projection Head
 
-The projection head is a very simple MLP with 2 layers as noted in *"We use MLP with one hidden layer to obtain z_i = g(h_i)=W^(2) * σ((W^(1))*h_i) where σ is a ReLU non linearity"*
+The projection head is a very simple MLP with 2 layers as noted in 
+*"We use MLP with one hidden layer to obtain z_i = g(h_i)=W^(2) x σ((W^(1)) x h_i) where σ is a ReLU non linearity"*
+
+The implementations can be found at file [network.py](./src/networks.py#MLP_Projection)
+
 ## Loss Functions
+I implement all 3 algorithms that were tested:
+
+* NT-Xent
+* NT-Logistic
+* Margin Triplet
+
+Everything is hosted at file [losses.py](./src/network.py#MLP_Projection)
+
+Their loss function is clearly described in section 2.1 where they frame the dot product between 2 examples as *sim(u,v) = (u^T x V)/(||u|| x ||v||)*
+
+And then they define the loss l_(i,j) = -log((e^(sim(z_i, z_j)/temprature))/SUM_(k=1 -> N) e ^ (sim(z_i, z_k)/temprature)) and they name it as **NT-Xent**
+
+First, the similarity between two projected representations is defined as the **cosine similarity**:
+
+$$
+\operatorname{sim}(\mathbf{u}, \mathbf{v}) =
+\frac{\mathbf{u}^{\top}\mathbf{v}}
+{\|\mathbf{u}\|\,\|\mathbf{v}\|}.
+$$
+
+Using this similarity measure, the loss for a positive pair $(i, j)$ is defined as:
+
+$$
+\ell_{i,j}
+=
+-\log
+\frac{
+\exp\!\left(
+\operatorname{sim}(\mathbf{z}_i,\mathbf{z}_j)/\tau
+\right)
+}{
+\sum\limits_{k=1}^{2N}
+\exp\!\left(
+\operatorname{sim}(\mathbf{z}_i,\mathbf{z}_k)/\tau
+\right)
+},
+$$
+
 ## Pipeline

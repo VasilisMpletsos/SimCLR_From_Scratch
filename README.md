@@ -74,7 +74,7 @@ The implementations can be found at file [network.py](./src/networks.py#MLP_Proj
 ## Loss Functions
 I implement all 3 algorithms that were tested:
 
-* NT-Xent
+* [NT-Xent](./src/losses.py#NT_Xent_Loss)
 * NT-Logistic
 * Margin Triplet
 

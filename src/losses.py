@@ -2,6 +2,7 @@ import torch
 from torch.nn import Module
 from torch.linalg import vector_norm
 from enum import Enum
+from torch.functional import F
 
 class LossType(Enum):
     MEAN = 0
@@ -13,32 +14,25 @@ class NT_Xent_Loss(Module):
     def __init__(self, temperature: float = 1.1, loss_type: LossType = LossType.MEAN):
         super().__init__()
         self.temp = temperature
-        self.K_NOT_I_MASK = torch.ones(5,5) - torch.eye(5, 5)
         self.loss_type = loss_type
 
     def forward(self,z1, z2):
-        norm_z1 = vector_norm(z1, dim=1, keepdim=True)
-        norm_z2 = vector_norm(z2, dim=1, keepdim=True)
-
-        # i,j view
-        sim_calcs = (z1 @ z2.T)/(norm_z1 * norm_z2.T)
-        exp_calc = torch.exp(sim_calcs/self.temp)
-        exp_sums = (exp_calc * self.K_NOT_I_MASK).sum(dim=1, keepdim=True)
-        losses = -torch.log(exp_calc/exp_sums)
-        view_ij_losses = torch.diag(losses)
-
-        # j,i view
-        # I am doing also j,i because as stated in the paper "The final loss is computed across all positive pairs, both (i, j) and (j, i), in a mini-batch."
-        sim_calcs = (z2 @ z1.T)/(norm_z2 * norm_z1.T)
-        exp_calc = torch.exp(sim_calcs/self.temp)
-        exp_sums = (exp_calc * self.K_NOT_I_MASK).sum(dim=1, keepdim=True)
-        losses = -torch.log(exp_calc/exp_sums)
-        view_ji_losses = torch.diag(losses)
-
-        # Total loss
-        losses = torch.stack([view_ij_losses,view_ji_losses])
+        N = z1.shape[0]
+        double_N = 2 * N
+        z = torch.cat([z1,z2], dim=0)
+        norm_z = F.normalize(z)
+        similarities = z @ z.T
+        exp_similarities = torch.exp(similarities/self.temp)
+        masked_exp_similarities = exp_similarities.masked_fill(torch.eye(double_N, double_N, dtype=torch.bool), torch.tensor(0))
+        sums = masked_exp_similarities.sum(dim=1, keepdim=True)
+        losses = exp_similarities/sums
+        valid_ids = torch.cat([torch.eye(N),torch.eye(N)], dim=0)
+        valid_ids = valid_ids @ valid_ids.T
+        valid_mask = valid_ids.bool()
+        valid_mask.fill_diagonal_(False)
+        positive_losses = losses[valid_ids.bool()]
 
         if (self.loss_type == LossType.MEAN):
-            return losses.mean()
+            return positive_losses.mean()
         else:
-            return losses.sum()
+            return positive_losses.sum()

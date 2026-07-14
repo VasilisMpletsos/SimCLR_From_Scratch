@@ -1,9 +1,10 @@
 # %% Imports
-from torchvision.models import resnet50
-from transformers import ResNetForImageClassification
-from torchviz import make_dot
-from torch.nn import Module, Linear, ReLU
 import torch
+from torch.nn import Linear, Module, ReLU
+from torchvision.models import resnet50
+from torchviz import make_dot
+from transformers import ResNetForImageClassification
+
 
 class MLP_Projection(Module):
     def __init__(self):
@@ -18,10 +19,11 @@ class MLP_Projection(Module):
         x = self.head(x)
         return x
 
+
 class BaseEncoder(Module):
     def __init__(self):
         super().__init__()
-        self.base_encoder = resnet50(weights=None);
+        self.base_encoder = resnet50(weights=None)
 
     def forward(self, x):
         x = self.base_encoder(x)
@@ -29,16 +31,15 @@ class BaseEncoder(Module):
 
 
 class SimCLR(Module):
-
     def __init__(self, base_encoder: BaseEncoder, head: MLP_Projection):
         super().__init__()
 
         # %% Pytorch Implementation
-        self.base_encoder = base_encoder;
-        self.projection_head = head;
+        self.base_encoder = base_encoder
+        self.projection_head = head
 
-        # %% HF Implementation
-        # base_encoder = ResNetForImageClassification.from_pretrained("microsoft/resnet-50");
+    # %% HF Implementation
+    # base_encoder = ResNetForImageClassification.from_pretrained("microsoft/resnet-50");
 
     def forward(self, x):
         x = self.base_encoder(x)

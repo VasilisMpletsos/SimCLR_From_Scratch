@@ -2,13 +2,19 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
-from torch.utils.data import DataLoader
-from src.data import CustomImageNetDataset
-from src.networks import MLP_Projection, BaseEncoder, SimCLR
-from src.losses import NT_Xent_Loss, LossType
-from torch.nn import Module
 from torch.functional import F
+from torch.nn import Module
+from torch.utils.data import DataLoader
 
+from src.data import CustomImageNetDataset
+from src.losses import LossType, NT_Xent_Loss
+from src.networks import BaseEncoder, MLP_Projection, SimCLR
+
+# %% Tests
+eye_mask = torch.eye(5, 5)
+valid_ids = torch.cat([eye_mask, eye_mask], dim=0)
+valid_ids = valid_ids @ valid_ids.T
+valid_mask = valid_ids.bool().fill_diagonal_(False)
 # %% Tests
 dataset = CustomImageNetDataset(test_size=1000)
 dataloader = DataLoader(dataset, batch_size=10)

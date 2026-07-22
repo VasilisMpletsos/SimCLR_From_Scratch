@@ -1,4 +1,6 @@
 # %% Imports
+import os
+
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
@@ -6,11 +8,14 @@ from src.data import CustomImageNetDataset
 from src.losses import LossType, NT_Xent_Loss
 from src.networks import BaseEncoder, MLP_Projection, SimCLR
 
+os.environ["HF_HUB_DOWNLOAD_TIMEOUT"] = "300"  # 5 minutes
+os.environ["HF_HUB_ETAG_TIMEOUT"] = "30"
+
 if __name__ == "__main__":
     # %% Set Data
-    dataset = CustomImageNetDataset(test_size=1000)
+    dataset = CustomImageNetDataset()
     dataloader = DataLoader(
-        dataset, batch_size=64, num_workers=4, pin_memory=True, prefetch_factor=2
+        dataset, batch_size=32, num_workers=4, pin_memory=False, prefetch_factor=2
     )
 
     # Set Model
@@ -33,9 +38,9 @@ if __name__ == "__main__":
             sim_x1 = sim_clr(x_i)
             sim_x2 = sim_clr(x_j)
             loss = nt_xent_loss(sim_x1, sim_x2)
-            # if i % 10 == 0:
-            step_loss = loss.cpu().item()
-            print(f"Epoch {epoch} | Step {i} | Loss:{step_loss}")
+            if i % 10 == 0:
+                step_loss = loss.cpu().item()
+                print(f"Epoch {epoch} | Step {i} | Loss:{step_loss}")
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()

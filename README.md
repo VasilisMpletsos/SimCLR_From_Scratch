@@ -95,3 +95,8 @@ And then they define the loss l*(i,j) = -log((e^(sim(z_i, z_j)/temprature))/SUM*
 ## Pipeline
 
 See [main.py](./main.py) for the basic training pipeline, or [main_optimized.py](./main_optimized.py) for the GPU-optimized version with mixed precision training.
+
+In order to run in the server on a background task use:
+```
+nohup python main.py > main.log 2>&1 &
+```

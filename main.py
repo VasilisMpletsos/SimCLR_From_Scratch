@@ -95,5 +95,6 @@ if __name__ == "__main__":
                         (epoch * TRAIN_SIZE) + i + 1,
                     )
                     if total_loss < best_loss:
+                        best_loss = total_loss
                         now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
                         torch.save(base_encoder.state_dict(), f"./models/base_{now}")

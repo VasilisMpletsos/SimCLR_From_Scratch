@@ -94,9 +94,24 @@ And then they define the loss l*(i,j) = -log((e^(sim(z_i, z_j)/temprature))/SUM*
 
 ## Pipeline
 
-See [main.py](./main.py) for the basic training pipeline, or [main_optimized.py](./main_optimized.py) for the GPU-optimized version with mixed precision training.
+See [main.py](./main.py) for the training pipeline, 
+
+The process start by loading and creating the dataloaders and the model.
+After that the training start and every n = VALIDATION_STEP steps the validation takes place and if better model is found
+the base layer is saved.
 
 In order to run in the server on a background task use:
 ```
 nohup python main.py > main.log 2>&1 &
+```
+
+For DDP use
+```
+ulimit -c unlimited
+nohup torchrun --standalone --nproc-per-node=4 ddp_main.py > ddp_main.log 2>&1 &
+```
+
+And regarding tensorboard use:
+```
+nohup tensorboard --logdir ./runs/ --host 0.0.0.0 --port 7777 > tensorboard.log 2>&1 &
 ```

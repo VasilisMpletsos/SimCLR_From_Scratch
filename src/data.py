@@ -9,7 +9,7 @@ class CustomImageNetDataset(IterableDataset):
         super().__init__()
         self.dataset = load_dataset(
             "evanarlian/imagenet_1k_resized_256", streaming=True, split=split
-        ).shuffle(seed=42, buffer_size=100)
+        ).shuffle(buffer_size=100)
 
     def __iter__(self):
         for sample in self.dataset:

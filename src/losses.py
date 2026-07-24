@@ -29,7 +29,6 @@ class NT_Xent_Loss(Module):
         similarities = norm_z @ norm_z.T
         exp_similarities = torch.exp(similarities / self.temp)
 
-        # Get cached masks
         eye_mask = torch.eye(N, N, device=self.device)
         valid_ids = torch.cat([eye_mask, eye_mask], dim=0)
         valid_ids = valid_ids @ valid_ids.T
@@ -46,3 +45,40 @@ class NT_Xent_Loss(Module):
             return positive_losses.mean()
         else:
             return positive_losses.sum()
+
+
+class NT_Logistic_Loss(Module):
+    def __init__(
+        self,
+        temperature: float = 1.1,
+        loss_type: LossType = LossType.MEAN,
+        device="cpu",
+    ):
+        super().__init__()
+        self.temp = temperature
+        self.loss_type = loss_type
+        self.device = device
+
+    def forward(self, z1, z2):
+
+        N = z1.shape[0]
+
+        u = F.normalize(z1, dim=-1)
+        v = F.normalize(z2, dim=-1)
+
+        logits = (u @ v.T) / self.temp
+
+        neg_mask = torch.ones(N, N, device=self.device) - torch.eye(
+            N, N, device=self.device
+        )
+
+        positives = -F.logsigmoid(logits.diag())
+        negatives = logits[neg_mask.bool()]
+        negatives = -F.logsigmoid(-negatives)
+
+        losses = torch.cat([positives, negatives])
+
+        if self.loss_type == LossType.MEAN:
+            return losses.mean()
+        else:
+            return losses.sum()

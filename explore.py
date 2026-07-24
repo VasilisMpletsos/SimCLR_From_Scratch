@@ -1,25 +1,29 @@
-from datetime import datetime
-from time import time
+# %% Imports
+import torch
+import torch.nn.functional as F
 
+# %% Test
+x1 = torch.rand(5, 128)
+x2 = torch.rand(5, 128)
+temperature = torch.tensor(1.2)
 
-# %% Test numpy
-def count_eval(func):
+# %% Test
+x1 = F.normalize(x1)
+x2 = F.normalize(x2)
 
-    def wrapper(*args, **kwargs):
-        start = datetime.now()
-        func(*args, **kwargs)
-        end = datetime.now()
-        print(f"Difference was {end - start}")
+# %% Test
+logits = (x1 @ x2.T) / temperature
 
-    return wrapper
+# %% Test
+logits
 
-
-# %% Test numpy
-@count_eval
-def calculate():
-    for i in range(1_000):
-        for j in range(1_000):
-            sum = i - j
-
-
-calculate()
+# %% Test
+positives = -F.logsigmoid(logits.diag())
+# %% Test
+positives
+# %% Test
+negatives = logits[neg_mask.bool()]
+# %% Test
+negatives = -F.logsigmoid(-negatives)
+# %% Test
+negatives

@@ -82,8 +82,8 @@ The implementations can be found at file [network.py](./src/networks.py#MLP_Proj
 
 I implement all 3 algorithms that were tested:
 
-- [NT-Xent](./src/losses.py#NT_Xent_Loss) (Optimized with tensor caching)
-- NT-Logistic
+- [NT-Xent](./src/losses.py#NT_Xent_Loss)
+- [NT-Logistic](./src/losses.py#NT_Logistic_Loss)
 - Margin Triplet
 
 Everything is hosted at file [losses.py](./src/network.py#MLP_Projection)

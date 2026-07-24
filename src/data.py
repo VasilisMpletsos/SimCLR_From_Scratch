@@ -5,11 +5,15 @@ from src.augmentation import image_augmentation
 
 
 class CustomImageNetDataset(IterableDataset):
-    def __init__(self, split):
+    def __init__(self, split, skip: int = 0):
         super().__init__()
-        self.dataset = load_dataset(
-            "evanarlian/imagenet_1k_resized_256", streaming=True, split=split
-        ).shuffle(buffer_size=100)
+        self.dataset = (
+            load_dataset(
+                "evanarlian/imagenet_1k_resized_256", streaming=True, split=split
+            )
+            .skip(skip)
+            .shuffle(buffer_size=100)
+        )
 
     def __iter__(self):
         for sample in self.dataset:

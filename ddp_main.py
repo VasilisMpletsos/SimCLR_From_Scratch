@@ -4,8 +4,12 @@ from datetime import datetime
 
 import numpy as np
 import torch
-import torch.distributed as dist
-from torch.distributed import all_reduce, destroy_process_group, init_process_group
+from torch.distributed import (
+    ReduceOp,
+    all_reduce,
+    destroy_process_group,
+    init_process_group,
+)
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -17,12 +21,11 @@ from src.losses import LossType, NT_Xent_Loss
 from src.networks import BaseEncoder, MLP_Projection, SimCLR
 
 if __name__ == "__main__":
-    BATCH_SIZE = 128
+    BATCH_SIZE = 64
     LOG_STEP = 50
-    VALIDATION_STEP = 1000
+    VALIDATION_STEP = 10_000
     TRAIN_SIZE = 1_281_167
-    NUM_GPUS = 2
-    TEST_SIZE = 500
+    VAL_SIZE = 50_000
 
     # DDP Config
     ddp = int(os.getenv("RANK", -1)) != -1
@@ -45,7 +48,9 @@ if __name__ == "__main__":
 
     # %% Set Data
     train_dataset = CustomImageNetDataset(split="train")
-    validation_dataset = CustomImageNetDataset(split="val")
+    validation_dataset = CustomImageNetDataset(
+        split="val", skip=ddp_local_rank * (VAL_SIZE // ddp_world_size)
+    )
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -71,6 +76,7 @@ if __name__ == "__main__":
     mlp_projection_head = MLP_Projection()
     sim_clr = SimCLR(base_encoder, mlp_projection_head)
     sim_clr.to(device)
+    sim_clr = DDP(sim_clr, device_ids=[ddp_local_rank])
 
     # %% Configure loss & optimizer
     EPOCHS = 10
@@ -96,11 +102,9 @@ if __name__ == "__main__":
             loss = nt_xent_loss(sim_x1, sim_x2)
             global_step = (epoch * TRAIN_SIZE) + i + 1
             if (i % LOG_STEP == 0) and master_process:
-                step_loss = loss.cpu().item()
-                writer.add_scalar("Loss/train", step_loss, global_step)
-                print(f"Global Step {global_step} | Loss:{step_loss}")
+                writer.add_scalar("Loss/train", loss.cpu().item(), global_step)
+                print(f"Global Step {global_step} | Loss:{loss}")
             loss.backward()
-            all_reduce(loss, op=dist.ReduceOp.AVG)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad()
@@ -116,17 +120,19 @@ if __name__ == "__main__":
                         sim_x1 = sim_clr(x_i)
                         sim_x2 = sim_clr(x_j)
                         loss = nt_xent_loss(sim_x1, sim_x2)
-                        all_reduce(loss, op=dist.ReduceOp.AVG)
                         total_loss.append(loss.cpu().item())
                     total_loss = np.asarray(total_loss).mean()
+                    loss_tensor = torch.tensor(total_loss, device=device)
+                    all_reduce(loss_tensor, op=ReduceOp.AVG)
                     if master_process:
                         writer.add_scalar(
                             "Loss/validation",
-                            total_loss.item(),
+                            loss_tensor.item(),
                             global_step,
                         )
-                        if total_loss < best_loss:
-                            best_loss = total_loss
+                        val_loss = loss_tensor.numpy()
+                        if val_loss < best_loss:
+                            best_loss = val_loss
                             torch.save(
                                 base_encoder.state_dict(),
                                 f"./models/base_{global_step}",
